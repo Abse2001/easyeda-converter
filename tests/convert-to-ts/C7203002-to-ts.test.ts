@@ -2,6 +2,7 @@ import { it, expect } from "bun:test"
 import chipRawEasy from "../assets/C7203002.raweasy.json"
 import { convertBetterEasyToTsx } from "lib/websafe/convert-to-typescript-component"
 import { EasyEdaJsonSchema } from "lib/schemas/easy-eda-json-schema"
+import { runTscircuitCode } from "tscircuit"
 
 it("should convert C7203002 into typescript file", async () => {
   const betterEasy = EasyEdaJsonSchema.parse(chipRawEasy)
@@ -12,7 +13,20 @@ it("should convert C7203002 into typescript file", async () => {
   expect(result).not.toContain("milmm")
   expect(result).not.toContain("NaNmm")
 
-  // Add more specific assertions here based on the component
+  const circuitJson = await runTscircuitCode(result)
+  const circuitJsonWithBoard = circuitJson.concat([
+    {
+      type: "pcb_board",
+      center: { x: 0, y: 0 },
+      width: 20,
+      height: 20,
+      pcb_board_id: "main_board",
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4",
+    },
+  ])
+  await expect(circuitJsonWithBoard).toMatch3dSnapshot(import.meta.path)
 
   expect(result).toMatchInlineSnapshot(`
     "import type { ChipProps } from "@tscircuit/props"
@@ -177,7 +191,7 @@ it("should convert C7203002 into typescript file", async () => {
     <silkscreenpath route={[{"x":-18.75890964999985,"y":-10.49997899999994},{"x":-18.28116104999981,"y":-10.49997899999994}]} />
     <silkscreenpath route={[{"x":-21.298909649999928,"y":-10.49997899999994},{"x":-20.821161049999887,"y":-10.49997899999994}]} />
     <silkscreenpath route={[{"x":-23.838909649999778,"y":-10.49997899999994},{"x":-23.361161049999964,"y":-10.49997899999994}]} />
-    <courtyardoutline points={[{"x":-27.92123624999988,"y":11.937048000000118},{"x":26.045763750000106,"y":11.937048000000118},{"x":26.045763750000106,"y":-12.997751999999764},{"x":-27.92123624999988,"y":-12.997751999999764},{"x":-27.92123624999988,"y":11.937048000000118}]} />
+    <courtyardoutline points={[{"x":-1026.1010724999996,"y":747.0687999999999},{"x":-972.1340724999998,"y":747.0687999999999},{"x":-972.1340724999998,"y":772.0035999999998},{"x":-1026.1010724999996,"y":772.0035999999998},{"x":-1026.1010724999996,"y":747.0687999999999}]} />
           </footprint>}
           
           {...props}

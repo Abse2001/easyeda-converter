@@ -4,6 +4,7 @@ import { convertBetterEasyToTsx } from "lib/websafe/convert-to-typescript-compon
 import { EasyEdaJsonSchema } from "lib/schemas/easy-eda-json-schema"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { convertEasyEdaJsonToCircuitJson } from "lib/convert-easyeda-json-to-tscircuit-soup-json"
+import { runTscircuitCode } from "tscircuit"
 
 it("should convert C22446580 into typescript file", async () => {
   const betterEasy = EasyEdaJsonSchema.parse(chipRawEasy)
@@ -70,12 +71,12 @@ it("should convert C22446580 into typescript file", async () => {
     <silkscreenpath route={[{"x":1.2750799999999884,"y":-1.724964799999995},{"x":1.7249139999999983,"y":-1.724964799999995},{"x":1.7249139999999983,"y":-1.2751307999999923}]} />
     <silkscreenpath route={[{"x":-1.2750800000000027,"y":-1.724964799999995},{"x":-1.7249139999999983,"y":-1.724964799999995},{"x":-1.7249139999999983,"y":-1.2751307999999923}]} />
     <silkscreenpath route={[{"x":-2.075179999999996,"y":1.5239492000000041},{"x":-1.9245379702960648,"y":1.672690255997665},{"x":-1.775160575985261,"y":1.522679200000006},{"x":-1.9245379702960648,"y":1.372668144002347},{"x":-2.075179999999996,"y":1.521409200000008}]} />
-    <courtyardoutline points={[{"x":-2.637600000000006,"y":2.002600000000001},{"x":2.002600000000001,"y":2.002600000000001},{"x":2.002600000000001,"y":-2.0279999999999987},{"x":-2.637600000000006,"y":-2.0279999999999987},{"x":-2.637600000000006,"y":2.002600000000001}]} />
+    <courtyardoutline points={[{"x":-67.0266,"y":-59.53359999999999},{"x":-62.386399999999995,"y":-59.53359999999999},{"x":-62.386399999999995,"y":-55.50299999999999},{"x":-67.0266,"y":-55.50299999999999},{"x":-67.0266,"y":-59.53359999999999}]} />
           </footprint>}
           cadModel={{
             objUrl: "https://modelcdn.tscircuit.com/easyeda_models/download?uuid=86016d4675144293b45eabfe7e8ef2ff&pn=C22446580",
             rotationOffset: { x: 0, y: 0, z: 0 },
-            positionOffset: { x: 0, y: -0.000050799999989692424, z: -1.0999962000000003 },
+            positionOffset: { x: 0, y: 0, z: 0.01 },
           }}
           {...props}
         />
@@ -88,5 +89,18 @@ it("should convert C22446580 into typescript file", async () => {
     import.meta.path,
   )
 
-  await expect(circuitJson).toMatch3dSnapshot(import.meta.path)
+  const generatedCircuitJson = await runTscircuitCode(result)
+  const circuitJsonWithBoard = generatedCircuitJson.concat([
+    {
+      type: "pcb_board",
+      center: { x: 0, y: 0 },
+      width: 20,
+      height: 20,
+      pcb_board_id: "main_board",
+      thickness: 1.6,
+      num_layers: 2,
+      material: "fr4",
+    },
+  ])
+  await expect(circuitJsonWithBoard).toMatch3dSnapshot(import.meta.path)
 })
