@@ -72,7 +72,17 @@ const getRotatedOffsetMm = ({
 
 export const getCadModelOffsetMm = (easyEdaJson: BetterEasyEdaJson) => {
   const svgNode = getCadSvgNode(easyEdaJson)
-  const bounds = easyEdaJson._objMetadata?.bounds
+  return getCadModelOffsetMmFromBounds(
+    easyEdaJson,
+    easyEdaJson._objMetadata?.bounds,
+  )
+}
+
+export const getCadModelOffsetMmFromBounds = (
+  easyEdaJson: BetterEasyEdaJson,
+  bounds?: XYBounds,
+) => {
+  const svgNode = getCadSvgNode(easyEdaJson)
   if (!svgNode || !bounds) return null
 
   const [originX, originY] = String(svgNode.svgData.attrs?.c_origin ?? "0,0")
