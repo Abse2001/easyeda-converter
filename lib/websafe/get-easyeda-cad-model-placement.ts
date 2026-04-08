@@ -1,6 +1,7 @@
 import type { BetterEasyEdaJson } from "lib/schemas/easy-eda-json-schema"
 import {
   getCadModelOffsetMm,
+  getCadModelOffsetMmFromBounds,
   getCadSvgNodeModelUuid,
   getCadSvgNodeZOffsetMm,
 } from "./get-easyeda-cad-placement-helpers"
@@ -78,16 +79,9 @@ export const getEasyEdaCadModelPlacement = async (
 ): Promise<EasyEdaCadModelPlacement | null> => {
   const modelUuid = getCadSvgNodeModelUuid(easyEdaJson)
   const partNumber = easyEdaJson.lcsc.number
-  const derivedOffsetMm = getCadModelOffsetMm(easyEdaJson)
   const svgNodeZOffsetMm = getCadSvgNodeZOffsetMm(easyEdaJson)
 
-  if (
-    !modelUuid ||
-    !partNumber ||
-    svgNodeZOffsetMm == null ||
-    !derivedOffsetMm ||
-    !fetch
-  ) {
+  if (!modelUuid || !partNumber || svgNodeZOffsetMm == null || !fetch) {
     return null
   }
 
@@ -102,6 +96,9 @@ export const getEasyEdaCadModelPlacement = async (
 
   const metadataBounds = easyEdaJson._objMetadata?.bounds
   if (metadataBounds) {
+    const derivedOffsetMm = getCadModelOffsetMm(easyEdaJson)
+    if (!derivedOffsetMm) return null
+
     return {
       modelObjUrl,
       positionXMm: derivedOffsetMm.x,
@@ -124,6 +121,9 @@ export const getEasyEdaCadModelPlacement = async (
       const objText = await response.text()
       const bounds = parseObjBounds(objText)
       if (!bounds) return null
+
+      const derivedOffsetMm = getCadModelOffsetMmFromBounds(easyEdaJson, bounds)
+      if (!derivedOffsetMm) return null
 
       return {
         modelObjUrl,
