@@ -332,6 +332,19 @@ export const PathShapeSchema = z
   .transform(parsePath)
   .pipe(PathShapeOutputSchema)
 
+/**
+ * EasyEDA sometimes serializes absent optional text fields as the literal string
+ * "undefined" instead of omitting them or leaving them empty.
+ */
+const optionalEasyEdaTextField = <T extends z.ZodTypeAny>(fieldSchema: T) =>
+  z.preprocess((textField) => {
+    if (textField == null || textField === "" || textField === "undefined") {
+      return undefined
+    }
+
+    return textField
+  }, fieldSchema)
+
 const TextShapeOutputSchema = z.object({
   type: z.literal("TEXT"),
   alignment: z.enum(["L", "C", "R"]),
@@ -339,11 +352,13 @@ const TextShapeOutputSchema = z.object({
   y: z.number(),
   rotation: z.number(),
   fontColor: z.string(),
-  backgroundColor: z.string().optional(),
+  backgroundColor: optionalEasyEdaTextField(z.string().optional()),
   fontSize: z.string(),
-  fontWeight: z.string().optional().default("normal"),
-  fontStyle: z.enum(["normal", "italic"]).optional().default("normal"),
-  fontDecoration: z.string().optional().default(""),
+  fontWeight: optionalEasyEdaTextField(z.string().optional().default("normal")),
+  fontStyle: optionalEasyEdaTextField(
+    z.enum(["normal", "italic"]).optional().default("normal"),
+  ),
+  fontDecoration: optionalEasyEdaTextField(z.string().optional().default("")),
   content: z.string(),
   textType: z.string(),
   visibility: z.enum(["0", "1"]),
@@ -351,7 +366,7 @@ const TextShapeOutputSchema = z.object({
   id: z.string(),
 })
 
-const parseText = (str: string): z.infer<typeof TextShapeOutputSchema> => {
+const parseText = (str: string): z.input<typeof TextShapeOutputSchema> => {
   const [
     ,
     alignment,
@@ -370,6 +385,7 @@ const parseText = (str: string): z.infer<typeof TextShapeOutputSchema> => {
     mirror,
     id,
   ] = str.split("~")
+
   return {
     type: "TEXT",
     alignment: alignment as "L" | "C" | "R",
@@ -377,11 +393,11 @@ const parseText = (str: string): z.infer<typeof TextShapeOutputSchema> => {
     y: Number(y),
     rotation: Number(rotation),
     fontColor,
-    backgroundColor: backgroundColor || undefined,
+    backgroundColor,
     fontSize,
-    fontWeight: fontWeight || "normal",
-    fontStyle: (fontStyle || "normal") as "normal" | "italic",
-    fontDecoration: fontDecoration || "",
+    fontWeight,
+    fontStyle,
+    fontDecoration,
     content,
     textType,
     visibility: visibility as "0" | "1",
