@@ -2,7 +2,12 @@ import type { ChipProps, SupplierPartNumbers } from "@tscircuit/props"
 import type { AnyCircuitElement } from "circuit-json"
 import { generateFootprintTsx } from "../generate-footprint-tsx"
 
-export type GeneratedComponentType = "chip" | "diode" | "led"
+export type GeneratedComponentType =
+  | "chip"
+  | "diode"
+  | "led"
+  | "pushbutton"
+  | "switch"
 
 interface Params {
   pinLabels: ChipProps["pinLabels"]
@@ -125,6 +130,70 @@ export const ${componentName} = (props: LedProps) => {
   return (
     <led
       name={name}
+      supplierPartNumbers={${JSON.stringify(supplierPartNumbers, null, "  ")}}
+      manufacturerPartNumber="${manufacturerPartNumber}"
+      footprint={${footprintTsx}}
+      ${
+        objUrl || stepUrl
+          ? `cadModel={{
+${cadModelLines}
+      }}`
+          : ""
+      }
+      {...restProps}
+    />
+  )
+}
+`.trim()
+  }
+
+  if (componentType === "pushbutton") {
+    return `
+import type { PushButtonProps } from "@tscircuit/props"
+
+const pinLabels = {
+${pinLabelsString}
+} as const
+
+export const ${componentName} = (props: PushButtonProps<typeof pinLabels>) => {
+  const { name = "SW1", ...restProps } = props
+
+  return (
+    <pushbutton
+      name={name}
+      pinLabels={pinLabels}
+      supplierPartNumbers={${JSON.stringify(supplierPartNumbers, null, "  ")}}
+      manufacturerPartNumber="${manufacturerPartNumber}"
+      footprint={${footprintTsx}}
+      ${
+        objUrl || stepUrl
+          ? `cadModel={{
+${cadModelLines}
+      }}`
+          : ""
+      }
+      {...restProps}
+    />
+  )
+}
+`.trim()
+  }
+
+  if (componentType === "switch") {
+    return `
+import type { SwitchProps } from "@tscircuit/props"
+
+const pinLabels = {
+${pinLabelsString}
+} as const
+
+export const ${componentName} = (props: SwitchProps) => {
+  const { name = "SW1", ...restProps } = props
+
+  return (
+    <switch
+      name={name}
+      pinLabels={pinLabels}
       supplierPartNumbers={${JSON.stringify(supplierPartNumbers, null, "  ")}}
       manufacturerPartNumber="${manufacturerPartNumber}"
       footprint={${footprintTsx}}
